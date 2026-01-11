@@ -1,5 +1,6 @@
+
 let lastActive = Date.now();
-const LOCK_TIME = 10 * 1000; // 10 seconds
+const LOCK_TIME = 10 * 1000; // 10 sec
 
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg.type === 'ACTIVE') {
@@ -7,8 +8,8 @@ chrome.runtime.onMessage.addListener((msg) => {
   }
 
   if (msg.type === 'FORCE_UNLOCK') {
-    chrome.storage.local.set({ locked: false });
     lastActive = Date.now();
+    chrome.storage.local.set({ locked: false });
   }
 });
 
@@ -17,3 +18,4 @@ setInterval(() => {
     chrome.storage.local.set({ locked: true });
   }
 }, 1000);
+
