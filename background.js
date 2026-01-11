@@ -1,6 +1,5 @@
-
 let lastActive = Date.now();
-const LOCK_TIME = 10 * 1000; // 10 sec
+const LOCK_TIME = 10 * 1000;
 
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg.type === 'ACTIVE') {
@@ -18,4 +17,3 @@ setInterval(() => {
     chrome.storage.local.set({ locked: true });
   }
 }, 1000);
-

@@ -1,31 +1,41 @@
-
-const PASSWORD = '807502';
+const PASSWORD = '1234';
 let lockShown = false;
 
-// user activity → global timer reset
+/* 1️⃣ User activity → global timer reset */
 ['mousemove', 'keydown', 'click', 'scroll'].forEach(event => {
   document.addEventListener(event, () => {
     chrome.runtime.sendMessage({ type: 'ACTIVE' });
   });
 });
 
-// 🔥 GLOBAL STORAGE LISTENER (সব tab sync করবে)
+/* 2️⃣ INSTANT sync (unlock হলে সাথে সাথে) */
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === 'local' && changes.locked) {
-    if (changes.locked.newValue === true) {
-      showLockScreen();
-    } else {
-      removeLockScreen();
-    }
+    handleLockChange(changes.locked.newValue);
   }
 });
 
-// initial load check
+/* 3️⃣ FALLBACK sync (যদি event miss হয়) */
+setInterval(() => {
+  chrome.storage.local.get('locked', (data) => {
+    handleLockChange(data.locked);
+  });
+}, 500);
+
+/* 4️⃣ Initial load */
 chrome.storage.local.get('locked', (data) => {
-  if (data.locked === true) {
+  handleLockChange(data.locked);
+});
+
+function handleLockChange(isLocked) {
+  if (isLocked === true && !lockShown) {
     showLockScreen();
   }
-});
+
+  if (isLocked === false && lockShown) {
+    removeLockScreen();
+  }
+}
 
 function showLockScreen() {
   if (lockShown) return;
@@ -64,7 +74,7 @@ function showLockScreen() {
       return;
     }
 
-    // 🔓 ONE TAB unlock → ALL TAB unlock
+    // 🔓 ONE TAB unlock → ALL TAB unlock (NO reload)
     chrome.runtime.sendMessage({ type: 'FORCE_UNLOCK' });
   };
 }
