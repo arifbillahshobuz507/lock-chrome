@@ -1,41 +1,35 @@
 const PASSWORD = '1234';
 let lockShown = false;
 
-/* 1️⃣ User activity → global timer reset */
+/* user activity */
 ['mousemove', 'keydown', 'click', 'scroll'].forEach(event => {
   document.addEventListener(event, () => {
     chrome.runtime.sendMessage({ type: 'ACTIVE' });
   });
 });
 
-/* 2️⃣ INSTANT sync (unlock হলে সাথে সাথে) */
-chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === 'local' && changes.locked) {
-    handleLockChange(changes.locked.newValue);
-  }
-});
-
-/* 3️⃣ FALLBACK sync (যদি event miss হয়) */
-setInterval(() => {
-  chrome.storage.local.get('locked', (data) => {
-    handleLockChange(data.locked);
-  });
-}, 500);
-
-/* 4️⃣ Initial load */
-chrome.storage.local.get('locked', (data) => {
-  handleLockChange(data.locked);
-});
-
-function handleLockChange(isLocked) {
-  if (isLocked === true && !lockShown) {
+/* 🔔 instant LOCK message */
+chrome.runtime.onMessage.addListener((msg) => {
+  if (msg.type === 'LOCK_NOW') {
     showLockScreen();
   }
+});
 
-  if (isLocked === false && lockShown) {
-    removeLockScreen();
+/* storage sync (unlock + fallback) */
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'local' && changes.locked) {
+    if (changes.locked.newValue === false) {
+      removeLockScreen();
+    }
   }
-}
+});
+
+/* initial load */
+chrome.storage.local.get('locked', (data) => {
+  if (data.locked === true) {
+    showLockScreen();
+  }
+});
 
 function showLockScreen() {
   if (lockShown) return;
@@ -58,7 +52,7 @@ function showLockScreen() {
         <h2>🔒 Chrome Locked</h2>
         <input id="lock-pass" type="password" placeholder="Password"
           style="padding:10px;width:200px"><br><br>
-        <button id="unlock-btn" style="padding:8px 20px">Unlock</button>
+        <button id="unlock-btn">Unlock</button>
         <p id="lock-error" style="color:red"></p>
       </div>
     </div>
@@ -74,7 +68,6 @@ function showLockScreen() {
       return;
     }
 
-    // 🔓 ONE TAB unlock → ALL TAB unlock (NO reload)
     chrome.runtime.sendMessage({ type: 'FORCE_UNLOCK' });
   };
 }
