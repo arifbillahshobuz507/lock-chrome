@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Auto Lock Chrome",
+  "version": "1.0",
+  "description": "WhatsApp style auto lock system",
+  "permissions": ["storage"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["lock.html"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
